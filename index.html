@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f6f7f4">
+  <title>PaisaIQ — your money, in focus</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #202820;
+      --muted: #858b82;
+      --line: #e9ebe5;
+      --paper: #fff;
+      --canvas: #f6f7f4;
+      --green: #245c43;
+      --green-soft: #eaf2eb;
+      --lime: #d7ed9b;
+      --orange: #e89a66;
+      --purple: #aa9ce0;
+      --blue: #8db9dc;
+      --shadow: 0 12px 36px rgba(37, 47, 37, .055);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--canvas); color: var(--ink); min-width: 320px; }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .app-shell { display: flex; min-height: 100vh; max-width: 1600px; margin: auto; }
+    .sidebar {
+      width: 238px; flex: 0 0 238px; min-height: 100vh; padding: 28px 18px;
+      display: flex; flex-direction: column; background: #fff; border-right: 1px solid var(--line);
+    }
+    .brand { display: flex; align-items: center; gap: 10px; padding: 0 12px; font-size: 21px; font-weight: 750; letter-spacing: -1px; }
+    .brand-mark { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 10px; color: white; background: var(--green); font-size: 17px; }
+    .nav-label { margin: 39px 12px 12px; color: #a0a49c; text-transform: uppercase; font-size: 10px; font-weight: 750; letter-spacing: 1.15px; }
+    .nav { display: grid; gap: 5px; }
+    .nav-item { width: 100%; display: flex; align-items: center; gap: 12px; border: 0; border-radius: 10px; padding: 11px 12px; color: #757c72; background: transparent; font-size: 13px; font-weight: 600; text-align: left; }
+    .nav-item.active { color: var(--green); background: var(--green-soft); }
+    .nav-item:hover:not(.active) { background: #f7f8f6; }
+    .nav-icon { width: 18px; text-align: center; font-size: 16px; }
+    .sidebar-bottom { margin-top: auto; }
+    .sync-card { padding: 14px; border-radius: 13px; background: #f7f8f5; }
+    .sync-title { font-size: 12px; font-weight: 700; }
+    .sync-copy { margin-top: 5px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .privacy-note { margin: 13px 10px 0; color: #a1a69d; font-size: 10px; line-height: 1.5; }
+
+    main { flex: 1; min-width: 0; padding: 31px clamp(22px, 4vw, 58px) 48px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 34px; }
+    .breadcrumb { color: var(--muted); font-size: 12px; }
+    .breadcrumb strong { color: var(--ink); font-weight: 650; }
+    .top-actions { display: flex; align-items: center; gap: 10px; }
+    .month-select { height: 38px; padding: 0 31px 0 12px; border: 1px solid var(--line); border-radius: 9px; color: #41483f; background: white; font-size: 12px; }
+    .avatar { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; color: var(--green); background: #e8eee7; font-size: 12px; font-weight: 700; }
+    h1 { margin: 0; font-size: clamp(24px, 3vw, 31px); letter-spacing: -1.15px; line-height: 1.15; }
+    .subtitle { margin: 8px 0 23px; color: var(--muted); font-size: 13px; }
+    .heading-row { display: flex; align-items: end; justify-content: space-between; gap: 14px; }
+    .button-row { display: flex; gap: 9px; }
+    .button { min-height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 13px; border: 1px solid var(--line); border-radius: 9px; color: #41483f; background: white; font-size: 12px; font-weight: 650; transition: .15s ease; }
+    .button:hover { border-color: #c9d2c8; transform: translateY(-1px); }
+    .button.primary { border-color: var(--green); color: white; background: var(--green); }
+    .button.primary:hover { background: #1d4d37; }
+    .button .plus { font-size: 17px; line-height: 0; }
+
+    .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 24px; }
+    .card { border: 1px solid #eef0eb; border-radius: 14px; background: var(--paper); box-shadow: var(--shadow); }
+    .metric { min-height: 127px; padding: 17px 18px; }
+    .metric-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .metric-label { color: #737a71; font-size: 11px; font-weight: 600; }
+    .metric-icon { width: 27px; height: 27px; display: grid; place-items: center; border-radius: 8px; background: #f3f5f0; font-size: 13px; }
+    .metric-value { margin-top: 13px; font-size: clamp(19px, 2.2vw, 25px); font-weight: 700; letter-spacing: -.8px; }
+    .metric-foot { display: flex; align-items: center; gap: 5px; margin-top: 7px; color: var(--muted); font-size: 10px; }
+    .trend { color: #35805a; font-weight: 700; }
+    .trend.down { color: #d27856; }
+
+    .content-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(275px, .95fr); gap: 15px; margin-top: 16px; }
+    .panel { padding: 19px 20px; }
+    .panel-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    h2 { margin: 0; font-size: 14px; letter-spacing: -.2px; }
+    .panel-subtitle { margin-top: 5px; color: var(--muted); font-size: 10px; }
+    .legend { display: flex; gap: 13px; align-items: center; color: #838981; font-size: 10px; }
+    .legend span { display: inline-flex; align-items: center; gap: 5px; }
+    .dot { width: 7px; height: 7px; display: inline-block; border-radius: 50%; background: var(--green); }
+    .dot.soft { background: #dce8d9; }
+    .chart-wrap { height: 174px; margin-top: 17px; }
+    .chart-wrap svg { width: 100%; height: 100%; overflow: visible; }
+    .gridline { stroke: #edf0ea; stroke-width: 1; }
+    .chart-label { fill: #979d94; font-size: 9px; }
+    .chart-bar { fill: #dce8d9; rx: 4; }
+    .chart-bar.current { fill: #356a4c; }
+    .chart-tip { fill: #4a5449; font-size: 9px; font-weight: 650; }
+    .donut-area { display: flex; align-items: center; justify-content: center; gap: clamp(17px, 3vw, 34px); min-height: 178px; }
+    .donut { width: 145px; height: 145px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 50%; background: conic-gradient(var(--green) 0 37%, var(--lime) 37% 60%, var(--orange) 60% 76%, var(--purple) 76% 88%, var(--blue) 88% 100%); position: relative; }
+    .donut::after { position: absolute; width: 98px; height: 98px; border-radius: 50%; background: white; content: ""; }
+    .donut-center { z-index: 1; text-align: center; }
+    .donut-total { font-size: 19px; font-weight: 700; letter-spacing: -.5px; }
+    .donut-caption { margin-top: 3px; color: var(--muted); font-size: 9px; }
+    .category-list { min-width: 115px; display: grid; gap: 11px; }
+    .category-row { display: grid; grid-template-columns: 8px 1fr auto; align-items: center; gap: 7px; font-size: 10px; }
+    .category-swatch { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+    .category-name { color: #777e74; }
+    .category-amount { color: #333a32; font-weight: 650; }
+    .insight { display: flex; align-items: flex-start; gap: 11px; margin-top: 14px; padding: 13px; border-radius: 11px; background: #f1f5ec; }
+    .insight-icon { width: 25px; height: 25px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 8px; background: #e0ebd6; }
+    .insight strong { display: block; font-size: 10px; }
+    .insight p { margin: 4px 0 0; color: #737c6d; font-size: 10px; line-height: 1.5; }
+
+    .transactions { margin-top: 16px; overflow: hidden; }
+    .transactions-head { padding: 18px 20px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .transactions-tools { display: flex; align-items: center; gap: 8px; }
+    .search { width: 155px; height: 33px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: white; font-size: 11px; outline: none; }
+    .search:focus, input:focus, select:focus { border-color: #71977c; box-shadow: 0 0 0 3px rgba(53, 106, 76, .1); outline: none; }
+    .filter-select { height: 33px; padding: 0 26px 0 9px; border: 1px solid var(--line); border-radius: 8px; color: #666e64; background: white; font-size: 10px; }
+    .table-scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    thead { background: #fafbf9; }
+    th { padding: 10px 20px; color: #969c93; font-size: 9px; font-weight: 650; letter-spacing: .45px; text-transform: uppercase; white-space: nowrap; }
+    td { padding: 12px 20px; border-top: 1px solid #f0f1ed; color: #565e54; font-size: 11px; white-space: nowrap; }
+    .merchant { display: flex; align-items: center; gap: 10px; color: #343c33; font-weight: 650; }
+    .merchant-icon { width: 29px; height: 29px; display: grid; place-items: center; border-radius: 9px; background: #f3f4ef; font-size: 13px; }
+    .merchant-detail { display: block; margin-top: 3px; color: #949a91; font-size: 9px; font-weight: 400; }
+    .category-pill { padding: 5px 8px; border-radius: 20px; color: #657160; background: #f3f5f0; font-size: 9px; }
+    .amount { color: #313a31; font-weight: 700; }
+    .delete-row { border: 0; color: #a0a59c; background: transparent; font-size: 16px; opacity: 0; }
+    tr:hover .delete-row { opacity: 1; }
+    .empty-state { padding: 27px; color: var(--muted); text-align: center; font-size: 12px; }
+    .extra-panel { margin-top: 16px; }
+    .budget-form { display: grid; grid-template-columns: minmax(0, 1fr) 110px auto; gap: 8px; margin-top: 14px; }
+    .budget-form select, .budget-form input, .assistant-form input { min-width: 0; height: 36px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: white; font-size: 11px; }
+    .budget-form .button { min-height: 36px; padding: 0 11px; font-size: 10px; }
+    .budget-list { display: grid; gap: 12px; margin-top: 15px; }
+    .budget-item { display: grid; gap: 7px; }
+    .budget-item-head { display: flex; justify-content: space-between; gap: 8px; font-size: 10px; }
+    .budget-item-head span:first-child { color: #697167; }
+    .budget-item-head span:last-child { color: #454d43; font-weight: 650; }
+    .budget-track { height: 6px; overflow: hidden; border-radius: 8px; background: #edf0ea; }
+    .budget-fill { height: 100%; border-radius: inherit; background: #6a9c71; transition: width .2s ease; }
+    .budget-fill.over { background: #dc805d; }
+    .assistant-form { display: flex; gap: 8px; margin-top: 14px; }
+    .assistant-form input { flex: 1; }
+    .assistant-form .button { min-height: 36px; }
+    .assistant-answer { min-height: 52px; margin-top: 13px; padding: 11px; border-radius: 9px; color: #5f6b5b; background: #f3f6f0; font-size: 11px; line-height: 1.55; }
+    .sample-note { margin: -9px 0 0; color: #a06e44; font-size: 10px; }
+    .type-pill { padding: 4px 7px; border-radius: 20px; color: #64705f; background: #f3f5f0; font-size: 9px; text-transform: capitalize; }
+    .type-pill.income { color: #34704e; background: #edf5ed; }
+    .type-pill.refund { color: #876336; background: #fbf3e7; }
+    .type-pill.transfer { color: #626b78; background: #f0f2f5; }
+    .row-category { max-width: 125px; padding: 5px 19px 5px 8px; border: 0; border-radius: 20px; color: #657160; background: #f3f5f0; font-size: 9px; }
+    .toast { position: fixed; right: 24px; bottom: 24px; z-index: 5; padding: 12px 16px; border-radius: 10px; color: white; background: #263d2d; box-shadow: var(--shadow); font-size: 12px; opacity: 0; transform: translateY(8px); pointer-events: none; transition: .2s ease; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .modal-backdrop { position: fixed; inset: 0; z-index: 10; display: none; place-items: center; padding: 20px; background: rgba(25, 33, 26, .35); }
+    .modal-backdrop.open { display: grid; }
+    .modal { width: min(100%, 410px); padding: 23px; border-radius: 16px; background: white; box-shadow: 0 24px 70px rgba(0,0,0,.18); }
+    .modal-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+    .modal-heading h2 { font-size: 17px; }
+    .close-modal { border: 0; color: #7e857b; background: transparent; font-size: 21px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+    .field { display: grid; gap: 6px; }
+    .field.full { grid-column: 1 / -1; }
+    .field label { color: #697167; font-size: 10px; font-weight: 650; }
+    .field input, .field select { width: 100%; height: 39px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: white; font-size: 12px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+    .file-input { display: none; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+
+    @media (max-width: 1050px) {
+      .sidebar { width: 205px; flex-basis: 205px; }
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .content-grid { grid-template-columns: 1fr; }
+      .category-panel { min-height: 245px; }
+    }
+    @media (max-width: 690px) {
+      .app-shell { display: block; }
+      .sidebar { width: 100%; min-height: auto; padding: 13px 16px; border-right: 0; border-bottom: 1px solid var(--line); }
+      .brand { padding: 0 3px; }
+      .nav-label, .sidebar-bottom { display: none; }
+      .nav { display: flex; gap: 3px; margin-top: 13px; overflow-x: auto; }
+      .nav-item { width: auto; flex: 0 0 auto; padding: 9px 10px; font-size: 11px; }
+      main { padding: 21px 16px 35px; }
+      .topbar { margin-bottom: 25px; }
+      .heading-row { align-items: flex-start; flex-direction: column; }
+      .metrics { gap: 9px; margin-top: 18px; }
+      .metric { min-height: 113px; padding: 13px; }
+      .metric-value { margin-top: 10px; }
+      .panel { padding: 16px; }
+      .donut-area { gap: 16px; }
+      .donut { width: 125px; height: 125px; }
+      .donut::after { width: 84px; height: 84px; }
+      .transactions-head { align-items: flex-start; flex-direction: column; }
+      .transactions-tools { width: 100%; }
+      .search { width: 100%; }
+      .budget-form { grid-template-columns: minmax(0, 1fr) 90px; }
+      .budget-form .button { grid-column: 1 / -1; }
+      th, td { padding-right: 13px; padding-left: 13px; }
+      .transactions th:first-child, .transactions td:first-child { padding-left: 16px; }
+    }
+    @media (max-width: 390px) {
+      .metric { padding: 11px; }
+      .metric-label { font-size: 10px; }
+      .metric-value { font-size: 19px; }
+      .donut-area { flex-direction: column; padding: 15px 0; }
+      .category-list { width: 100%; grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark">₹</span> PaisaIQ</div>
+      <div class="nav-label">Workspace</div>
+      <nav class="nav" aria-label="Main navigation">
+        <button class="nav-item active" type="button"><span class="nav-icon">▦</span> Overview</button>
+        <button class="nav-item" type="button" id="transactionsNav"><span class="nav-icon">↕</span> Transactions</button>
+        <button class="nav-item" type="button" id="budgetsNav"><span class="nav-icon">◷</span> Budgets</button>
+        <button class="nav-item" type="button" id="insightsNav"><span class="nav-icon">✳</span> Insights</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="sync-card">
+          <div class="sync-title">Private by design</div>
+          <div class="sync-copy">No bank connection is configured. Import a statement CSV to analyze your real transactions.</div>
+        </div>
+        <div class="privacy-note">Private by design · No bank login required</div>
+      </div>
+    </aside>
+
+    <main>
+      <div class="topbar">
+        <div class="breadcrumb">Workspace <span aria-hidden="true">/</span> <strong>Overview</strong></div>
+        <div class="top-actions">
+          <label class="sr-only" for="monthSelect">Select month</label>
+          <select class="month-select" id="monthSelect" aria-label="Select month"></select>
+          <div class="avatar" aria-label="Personal account">PI</div>
+        </div>
+      </div>
+
+      <div class="heading-row">
+        <div>
+          <h1>Your money, in focus.</h1>
+          <p class="subtitle" id="welcomeText">A little clarity goes a long way.</p>
+        </div>
+        <div class="button-row">
+          <button class="button" id="importButton" type="button">↥ <span>Import CSV</span></button>
+          <input class="file-input" id="csvInput" type="file" accept=".csv,text/csv">
+          <button class="button" id="exportButton" type="button">↧ <span>Export</span></button>
+          <button class="button" id="clearDataButton" type="button" title="Delete saved transactions and budgets">Clear</button>
+          <button class="button primary" id="addButton" type="button"><span class="plus">+</span> Add transaction</button>
+        </div>
+      </div>
+
+      <section class="metrics" aria-label="Monthly summary">
+        <article class="card metric">
+          <div class="metric-top"><span class="metric-label">Total spent</span><span class="metric-icon">↗</span></div>
+          <div class="metric-value" id="totalSpent">₹0</div>
+          <div class="metric-foot" id="spentFoot">Across all expenses</div>
+        </article>
+        <article class="card metric">
+          <div class="metric-top"><span class="metric-label">Income</span><span class="metric-icon">↓</span></div>
+          <div class="metric-value" id="totalIncome">₹0</div>
+          <div class="metric-foot">Income recorded this month</div>
+        </article>
+        <article class="card metric">
+          <div class="metric-top"><span class="metric-label">Net savings</span><span class="metric-icon">◈</span></div>
+          <div class="metric-value" id="netSavings">₹0</div>
+          <div class="metric-foot" id="savingsFoot">Income minus spending</div>
+        </article>
+        <article class="card metric">
+          <div class="metric-top"><span class="metric-label">Savings rate</span><span class="metric-icon">⌁</span></div>
+          <div class="metric-value" id="savingsRate">0%</div>
+          <div class="metric-foot" id="coverageFoot">Based on recorded transactions</div>
+        </article>
+      </section>
+
+      <section class="content-grid" aria-label="Spending analysis">
+        <article class="card panel">
+          <div class="panel-header">
+            <div><h2>Spending over time</h2><div class="panel-subtitle">A quick look at your recent months</div></div>
+            <div class="legend"><span><i class="dot"></i> This month</span><span><i class="dot soft"></i> Previous</span></div>
+          </div>
+          <div class="chart-wrap" id="barChart" aria-label="Monthly spending bar chart"></div>
+        </article>
+        <article class="card panel category-panel" id="categoryPanel">
+          <div class="panel-header">
+            <div><h2>Where it goes</h2><div class="panel-subtitle">Your spending by category</div></div>
+          </div>
+          <div class="donut-area">
+          <div class="donut" id="donut"><div class="donut-center"><div class="donut-total" id="donutTotal">₹0</div><div class="donut-caption">total spent</div></div></div>
+            <div class="category-list" id="categoryList"></div>
+          </div>
+          <div class="insight" id="insightBox"><div class="insight-icon">✳</div><div><strong>Your spending insight</strong><p id="insightText">Add transactions to see a personalized spending insight.</p></div></div>
+        </article>
+      </section>
+
+      <section class="content-grid extra-panel" aria-label="Budgets and financial assistant">
+        <article class="card panel" id="budgetPanel">
+          <div class="panel-header">
+            <div><h2>Monthly budgets</h2><div class="panel-subtitle">Set category limits and keep an eye on progress</div></div>
+          </div>
+          <form class="budget-form" id="budgetForm">
+            <label class="sr-only" for="budgetCategory">Budget category</label>
+            <select id="budgetCategory" aria-label="Budget category"></select>
+            <label class="sr-only" for="budgetAmount">Monthly budget amount</label>
+            <input id="budgetAmount" type="number" min="1" step="1" placeholder="Limit ₹" required>
+            <button class="button" type="submit">Set budget</button>
+          </form>
+          <div class="budget-list" id="budgetList"></div>
+        </article>
+        <article class="card panel">
+          <div class="panel-header">
+            <div><h2>Ask about your money</h2><div class="panel-subtitle">Answers use only the transactions shown for this month</div></div>
+          </div>
+          <form class="assistant-form" id="assistantForm">
+            <label class="sr-only" for="questionInput">Ask a question about spending</label>
+            <input id="questionInput" placeholder="e.g. How much did I spend on food?" required>
+            <button class="button primary" type="submit">Ask</button>
+          </form>
+          <div class="assistant-answer" id="assistantAnswer" aria-live="polite">Try asking about your savings, income, or a spending category. This is a simple on-device summary, not financial advice.</div>
+        </article>
+      </section>
+
+      <section class="card transactions" id="transactionsSection">
+        <div class="transactions-head">
+          <div><h2>Recent transactions</h2><div class="panel-subtitle">Your activity for the selected month</div></div>
+          <div class="transactions-tools">
+            <input id="searchInput" class="search" type="search" placeholder="⌕  Search transactions" aria-label="Search transactions">
+            <label class="sr-only" for="categoryFilter">Filter by category</label>
+            <select id="categoryFilter" class="filter-select"><option value="">All categories</option></select>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Transaction</th><th>Category</th><th>Type</th><th>Date</th><th>Amount</th><th></th></tr></thead>
+            <tbody id="transactionRows"></tbody>
+          </table>
+          <div class="empty-state" id="emptyState" hidden>No transactions found. Add one or import a CSV to get started.</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <form class="modal" id="transactionForm">
+      <div class="modal-heading"><h2 id="modalTitle">Add transaction</h2><button class="close-modal" id="closeModal" type="button" aria-label="Close">×</button></div>
+      <div class="form-grid">
+        <div class="field full"><label for="descriptionInput">Name</label><input id="descriptionInput" name="description" placeholder="e.g. Grocery store" required maxlength="80"></div>
+        <div class="field"><label for="amountInput">Amount</label><input id="amountInput" name="amount" type="number" min="0.01" step="0.01" placeholder="0.00" required></div>
+        <div class="field"><label for="typeInput">Type</label><select id="typeInput" name="type"><option value="expense">Expense</option><option value="income">Income</option><option value="refund">Refund</option><option value="transfer">Transfer</option></select></div>
+        <div class="field"><label for="categoryInput">Category</label><select id="categoryInput" name="category"></select></div>
+        <div class="field"><label for="dateInput">Date</label><input id="dateInput" name="date" type="date" required></div>
+      </div>
+      <div class="modal-actions"><button class="button" id="cancelModal" type="button">Cancel</button><button class="button primary" type="submit">Save transaction</button></div>
+    </form>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      const STORAGE_KEY = "paisaiq-transactions-v1";
+      const BUDGET_KEY = "paisaiq-budgets-v1";
+      const categories = ["Groceries", "Food & Dining", "Shopping", "Fuel", "Travel", "Rent", "Utilities", "Healthcare", "Education", "Entertainment", "Insurance", "EMIs", "Subscriptions", "Business income", "Salary", "Interest & dividends", "Refunds", "Other"];
+      const categoryColors = {
+        Groceries: "#245c43", "Food & Dining": "#d7ed9b", Shopping: "#e89a66",
+        Fuel: "#aa9ce0", Travel: "#8db9dc", Rent: "#efc56f", Utilities: "#86a2a3",
+        Healthcare: "#de91a1", Education: "#b29bd2", Entertainment: "#efc56f",
+        Insurance: "#9bb6d5", EMIs: "#c5a889", Subscriptions: "#93bd9b", Other: "#b9c3b4"
+      };
+      const categoryIcons = {
+        Groceries: "⌂", "Food & Dining": "☕", Shopping: "◉", Fuel: "↗",
+        Travel: "✈", Rent: "⌂", Utilities: "ϟ", Healthcare: "✚",
+        Education: "▤", Entertainment: "♫", Insurance: "◇", EMIs: "↘",
+        Subscriptions: "⟳", "Business income": "↙", Salary: "↓",
+        "Interest & dividends": "↗", Refunds: "↩", Other: "·"
+      };
+      const today = new Date();
+      const dateOffset = (days) => {
+        const date = new Date(today);
+        date.setDate(date.getDate() - days);
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+      };
+      const demoTransactions = [
+        { id: "demo-1", description: "BigBasket groceries", category: "Groceries", amount: 1840, type: "expense", date: dateOffset(0) },
+        { id: "demo-2", description: "Monthly salary", category: "Salary", amount: 85000, type: "income", date: dateOffset(1) },
+        { id: "demo-3", description: "Metro card recharge", category: "Travel", amount: 650, type: "expense", date: dateOffset(2) },
+        { id: "demo-4", description: "OTT subscription", category: "Subscriptions", amount: 499, type: "expense", date: dateOffset(3) },
+        { id: "demo-5", description: "Household supplies", category: "Shopping", amount: 2350, type: "expense", date: dateOffset(5) },
+        { id: "demo-6", description: "Electricity bill", category: "Utilities", amount: 2180, type: "expense", date: dateOffset(7) },
+        { id: "demo-7", description: "Cafe coffee", category: "Food & Dining", amount: 320, type: "expense", date: dateOffset(9) },
+        { id: "demo-8", description: "Pharmacy", category: "Healthcare", amount: 740, type: "expense", date: dateOffset(11) },
+        { id: "demo-9", description: "Neighbourhood market", category: "Groceries", amount: 1290, type: "expense", date: dateOffset(14) },
+        { id: "demo-10", description: "Bookshop", category: "Shopping", amount: 890, type: "expense", date: dateOffset(18) },
+        { id: "demo-11", description: "Internet bill", category: "Utilities", amount: 999, type: "expense", date: dateOffset(21) },
+        { id: "demo-12", description: "UPI transfer to savings", category: "Other", amount: 5000, type: "transfer", date: dateOffset(25) }
+      ];
+      const money = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 2 });
+      const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      })[char]);
+      const localDate = (iso) => {
+        const [year, month, day] = iso.split("-").map(Number);
+        return new Date(year, month - 1, day);
+      };
+      const monthKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      const monthTitle = (key) => {
+        const [year, month] = key.split("-").map(Number);
+        return new Date(year, month - 1, 1).toLocaleDateString(undefined, { month: "long", year: "numeric" });
+      };
+      const selectedMonth = document.getElementById("monthSelect");
+      let toastTimer;
+      const stored = (() => {
+        try {
+          const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+          if (Array.isArray(parsed) && parsed.every((tx) => tx && typeof tx.id === "string" && typeof tx.description === "string" && Number.isFinite(Number(tx.amount)) && /^\d{4}-\d{2}-\d{2}$/.test(tx.date))) {
+            return parsed.map((tx) => ({
+              ...tx, amount: Math.abs(Number(tx.amount)),
+              category: categories.includes(tx.category) ? tx.category : "Other",
+              type: ["income", "refund", "transfer"].includes(tx.type) ? tx.type : "expense"
+            }));
+          }
+        } catch (error) {
+          console.error("Could not read saved transactions.", error);
+          showToast("Saved data could not be read; using sample transactions.");
+        }
+        return null;
+      })();
+      let transactions = stored || demoTransactions.map((tx) => ({ ...tx }));
+      let hasPersonalData = Boolean(stored);
+      let activeMonth = monthKey(today);
+      let budgets = [];
+      try {
+        const savedBudgets = JSON.parse(localStorage.getItem(BUDGET_KEY) || "[]");
+        if (Array.isArray(savedBudgets)) {
+          budgets = savedBudgets.filter((budget) => budget && categories.includes(budget.category) && !["Salary", "Business income", "Interest & dividends"].includes(budget.category) && Number.isFinite(Number(budget.amount)) && Number(budget.amount) > 0)
+            .map((budget) => ({ category: budget.category, amount: Number(budget.amount) }));
+        }
+      } catch (error) {
+        console.error("Could not read saved budgets.", error);
+        showToast("Saved budgets could not be read.");
+      }
+
+      function save() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+        } catch (error) {
+          console.error("Could not save transactions.", error);
+          showToast("Couldn't save changes in this browser.");
+        }
+      }
+      function saveBudgets() {
+        try {
+          localStorage.setItem(BUDGET_KEY, JSON.stringify(budgets));
+        } catch (error) {
+          console.error("Could not save budgets.", error);
+          showToast("Couldn't save budgets in this browser.");
+        }
+      }
+      function showToast(message) {
+        const toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove("show"), 2800);
+      }
+      function buildMonthOptions() {
+        const keys = new Set([monthKey(today), ...transactions.map((tx) => tx.date.slice(0, 7))]);
+        const sorted = [...keys].sort().reverse();
+        selectedMonth.innerHTML = sorted.map((key) => `<option value="${key}">${escapeHtml(monthTitle(key))}</option>`).join("");
+        if (!keys.has(activeMonth)) activeMonth = sorted[0] || monthKey(today);
+        selectedMonth.value = activeMonth;
+      }
+      function selectedTransactions() {
+        return transactions.filter((tx) => tx.date.slice(0, 7) === activeMonth);
+      }
+      function renderMetrics(monthTx) {
+        const income = monthTx.filter((tx) => tx.type === "income").reduce((sum, tx) => sum + tx.amount, 0);
+        const expenses = monthTx.filter((tx) => tx.type === "expense");
+        const refunds = monthTx.filter((tx) => tx.type === "refund").reduce((sum, tx) => sum + tx.amount, 0);
+        const spent = Math.max(0, expenses.reduce((sum, tx) => sum + tx.amount, 0) - refunds);
+        const savings = income - spent;
+        document.getElementById("totalSpent").textContent = money.format(spent);
+        document.getElementById("totalIncome").textContent = money.format(income);
+        document.getElementById("netSavings").textContent = money.format(savings);
+        document.getElementById("netSavings").style.color = savings < 0 ? "#cb7655" : "";
+        document.getElementById("savingsRate").textContent = income ? `${Math.round((savings / income) * 100)}%` : "—";
+        document.getElementById("spentFoot").textContent = `${expenses.length} expenses${refunds ? ` · ${money.format(refunds)} refunded` : ""}`;
+        document.getElementById("savingsFoot").textContent = income ? "Cash-flow estimate; transfers excluded" : "Add income to calculate your savings rate";
+        document.getElementById("coverageFoot").textContent = hasPersonalData ? "Imported and manually entered records" : "Sample data · import a statement for your own";
+        document.getElementById("welcomeText").textContent = `${monthTitle(activeMonth)} · ${hasPersonalData ? "Your recorded transactions" : "Sample data — import a statement to personalize"}`;
+      }
+      function renderChart() {
+        const [year, month] = activeMonth.split("-").map(Number);
+        const periods = Array.from({ length: 6 }, (_, index) => {
+          const date = new Date(year, month - 1 - (5 - index), 1);
+          const key = monthKey(date);
+          const monthTransactions = transactions.filter((tx) => tx.date.slice(0, 7) === key);
+          const total = Math.max(0,
+            monthTransactions.filter((tx) => tx.type === "expense").reduce((sum, tx) => sum + tx.amount, 0) -
+            monthTransactions.filter((tx) => tx.type === "refund").reduce((sum, tx) => sum + tx.amount, 0)
+          );
+          return { key, total, label: date.toLocaleDateString(undefined, { month: "short" }) };
+        });
+        const max = Math.max(100, ...periods.map((period) => period.total));
+        const width = 520, height = 174, left = 30, right = 8, top = 14, bottom = 25;
+        const chartHeight = height - top - bottom, barWidth = 34, gap = (width - left - right - barWidth * periods.length) / (periods.length - 1);
+        let svg = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Spending totals for the last six months">`;
+        [0, .5, 1].forEach((fraction) => {
+          const y = top + chartHeight * fraction;
+          svg += `<line class="gridline" x1="${left}" y1="${y}" x2="${width - right}" y2="${y}"></line>`;
+          svg += `<text class="chart-label" x="0" y="${y + 3}">${fraction === 0 ? Math.round(max) : fraction === .5 ? Math.round(max / 2) : 0}</text>`;
+        });
+        periods.forEach((period, index) => {
+          const x = left + index * (barWidth + gap);
+          const barHeight = period.total ? Math.max(3, (period.total / max) * chartHeight) : 2;
+          const y = top + chartHeight - barHeight;
+          const isCurrent = period.key === activeMonth;
+          svg += `<rect class="chart-bar${isCurrent ? " current" : ""}" x="${x}" y="${y}" width="${barWidth}" height="${barHeight}"><title>${escapeHtml(period.label)}: ${money.format(period.total)}</title></rect>`;
+          if (period.total) svg += `<text class="chart-tip" x="${x + barWidth / 2}" y="${Math.max(9, y - 5)}" text-anchor="middle">${money.format(period.total).replace(/\.00$/, "")}</text>`;
+          svg += `<text class="chart-label" x="${x + barWidth / 2}" y="${height - 5}" text-anchor="middle">${escapeHtml(period.label)}</text>`;
+        });
+        document.getElementById("barChart").innerHTML = svg + "</svg>";
+      }
+      function renderCategories(monthTx) {
+        const sums = {};
+        monthTx.filter((tx) => tx.type === "expense" || tx.type === "refund").forEach((tx) => {
+          sums[tx.category] = (sums[tx.category] || 0) + (tx.type === "refund" ? -tx.amount : tx.amount);
+        });
+        Object.keys(sums).forEach((category) => { sums[category] = Math.max(0, sums[category]); });
+        const entries = Object.entries(sums).filter((entry) => entry[1] > 0).sort((a, b) => b[1] - a[1]);
+        const total = entries.reduce((sum, entry) => sum + entry[1], 0);
+        const display = entries.slice(0, 5);
+        const palette = display.map(([category]) => categoryColors[category] || categoryColors.Other);
+        let cumulative = 0;
+        const segments = display.map(([, amount], index) => {
+          const start = cumulative;
+          cumulative += total ? amount / total * 100 : 0;
+          return `${palette[index]} ${start}% ${cumulative}%`;
+        });
+        if (cumulative < 100) segments.push(`#edf0ea ${cumulative}% 100%`);
+        document.getElementById("donut").style.background = total ? `conic-gradient(${segments.join(",")})` : "#edf0ea";
+        document.getElementById("donutTotal").textContent = money.format(total);
+        const list = document.getElementById("categoryList");
+        list.innerHTML = display.length ? display.map(([category, amount], index) =>
+          `<div class="category-row"><span class="category-swatch" style="background:${palette[index]}"></span><span class="category-name">${escapeHtml(category)}</span><span class="category-amount">${money.format(amount)}</span></div>`
+        ).join("") : `<span class="panel-subtitle">No spending yet</span>`;
+        const insight = document.getElementById("insightText");
+        if (!entries.length) {
+          insight.textContent = "Add transactions to see a personalized spending insight.";
+        } else {
+          const [topCategory, topAmount] = entries[0];
+          const share = Math.round(topAmount / total * 100);
+          insight.textContent = `${topCategory} is your biggest category at ${money.format(topAmount)} (${share}% of spending).`;
+        }
+      }
+      function renderTransactions(monthTx) {
+        const query = document.getElementById("searchInput").value.trim().toLowerCase();
+        const category = document.getElementById("categoryFilter").value;
+        const filtered = monthTx.filter((tx) =>
+          (!category || tx.category === category) &&
+          (!query || `${tx.description} ${tx.category} ${tx.date}`.toLowerCase().includes(query))
+        ).sort((a, b) => b.date.localeCompare(a.date));
+        const rows = document.getElementById("transactionRows");
+        rows.innerHTML = filtered.map((tx) => {
+          const date = localDate(tx.date).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+          const sign = tx.type === "income" || tx.type === "refund" ? "+" : tx.type === "transfer" ? "" : "−";
+          const provenance = tx.account || tx.source;
+          return `<tr>
+            <td><div class="merchant"><span class="merchant-icon">${categoryIcons[tx.category] || categoryIcons.Other}</span><span>${escapeHtml(tx.description)}${provenance ? `<span class="merchant-detail">${escapeHtml(provenance)}</span>` : ""}</span></div></td>
+            <td><select class="row-category" data-category="${escapeHtml(tx.id)}" aria-label="Change category for ${escapeHtml(tx.description)}">${categories.map((item) => `<option value="${escapeHtml(item)}"${item === tx.category ? " selected" : ""}>${escapeHtml(item)}</option>`).join("")}</select></td>
+            <td><span class="type-pill ${escapeHtml(tx.type)}">${escapeHtml(tx.type)}</span></td>
+            <td>${escapeHtml(date)}</td>
+            <td class="amount">${sign}${money.format(tx.amount)}</td>
+            <td><button class="delete-row" type="button" data-delete="${escapeHtml(tx.id)}" aria-label="Delete ${escapeHtml(tx.description)}">×</button></td>
+          </tr>`;
+        }).join("");
+        document.getElementById("emptyState").hidden = filtered.length !== 0;
+      }
+      function renderBudgets(monthTx) {
+        const budgetCategories = categories.filter((category) => !["Salary", "Business income", "Interest & dividends"].includes(category));
+        document.getElementById("budgetCategory").innerHTML = budgetCategories.map((category) =>
+          `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`
+        ).join("");
+        const list = document.getElementById("budgetList");
+        if (!budgets.length) {
+          list.innerHTML = `<div class="panel-subtitle">No budgets yet. Set a monthly limit above to track progress.</div>`;
+          return;
+        }
+        list.innerHTML = budgets.map((budget) => {
+          const spent = monthTx.filter((tx) => tx.category === budget.category && (tx.type === "expense" || tx.type === "refund"))
+            .reduce((sum, tx) => sum + (tx.type === "refund" ? -tx.amount : tx.amount), 0);
+          const used = Math.max(0, spent);
+          const percent = Math.round(used / budget.amount * 100);
+          const width = Math.min(100, percent);
+          return `<div class="budget-item">
+            <div class="budget-item-head"><span>${escapeHtml(budget.category)} <button class="delete-row" type="button" data-budget-delete="${escapeHtml(budget.category)}" aria-label="Remove ${escapeHtml(budget.category)} budget">×</button></span><span>${money.format(used)} / ${money.format(budget.amount)} · ${percent}%</span></div>
+            <div class="budget-track" role="progressbar" aria-label="${escapeHtml(budget.category)} budget used" aria-valuenow="${Math.min(100, percent)}" aria-valuemin="0" aria-valuemax="100"><div class="budget-fill${percent >= 100 ? " over" : ""}" style="width:${width}%"></div></div>
+          </div>`;
+        }).join("");
+      }
+      function answerQuestion(question, monthTx) {
+        const normalized = question.toLowerCase();
+        const expenseRows = monthTx.filter((tx) => tx.type === "expense");
+        const refundTotal = monthTx.filter((tx) => tx.type === "refund").reduce((sum, tx) => sum + tx.amount, 0);
+        const spent = Math.max(0, expenseRows.reduce((sum, tx) => sum + tx.amount, 0) - refundTotal);
+        const income = monthTx.filter((tx) => tx.type === "income").reduce((sum, tx) => sum + tx.amount, 0);
+        const category = categories.find((item) => normalized.includes(item.toLowerCase()));
+        const categoryGroup = category ? [category]
+          : /food|grocer|grocery|dining|restaurant/.test(normalized) ? ["Groceries", "Food & Dining"]
+          : /transport|commut|travel/.test(normalized) ? ["Fuel", "Travel"]
+          : /bill|household/.test(normalized) ? ["Rent", "Utilities", "Insurance", "EMIs"]
+          : /health|medical/.test(normalized) ? ["Healthcare"]
+          : [];
+        if (categoryGroup.length) {
+          const categorySpend = monthTx.filter((tx) => categoryGroup.includes(tx.category) && (tx.type === "expense" || tx.type === "refund"))
+            .reduce((sum, tx) => sum + (tx.type === "refund" ? -tx.amount : tx.amount), 0);
+          const label = category ? category : categoryGroup.join(" and ");
+          return `You recorded ${money.format(Math.max(0, categorySpend))} in ${label} for ${monthTitle(activeMonth)} (after refunds).`;
+        }
+        if (/increas|highest|largest|most/.test(normalized)) {
+          const [year, month] = activeMonth.split("-").map(Number);
+          const previousMonth = monthKey(new Date(year, month - 2, 1));
+          const previousRows = transactions.filter((tx) => tx.date.slice(0, 7) === previousMonth);
+          if (!previousRows.length) return `There are no recorded transactions for ${monthTitle(previousMonth)}, so a month-over-month comparison is not available.`;
+          const categoryTotals = (key) => {
+            const totals = {};
+            transactions.filter((tx) => tx.date.slice(0, 7) === key && (tx.type === "expense" || tx.type === "refund"))
+              .forEach((tx) => { totals[tx.category] = (totals[tx.category] || 0) + (tx.type === "refund" ? -tx.amount : tx.amount); });
+            return totals;
+          };
+          const currentTotals = categoryTotals(activeMonth);
+          const previousTotals = categoryTotals(previousMonth);
+          const differences = categories.map((item) => [item, (currentTotals[item] || 0) - (previousTotals[item] || 0)]).sort((a, b) => b[1] - a[1]);
+          if (!previousMonth || differences[0][1] <= 0) return `No category increased versus ${monthTitle(previousMonth)} in the recorded transactions.`;
+          return `${differences[0][0]} increased the most, by ${money.format(differences[0][1])} versus ${monthTitle(previousMonth)}. This comparison uses recorded transactions only.`;
+        }
+        if (/saving|saved|savings|net/.test(normalized)) {
+          return income ? `Your recorded cash-flow estimate for ${monthTitle(activeMonth)} is ${money.format(income - spent)} saved (${Math.round((income - spent) / income * 100)}% of recorded income). Transfers are excluded.` : "There is no recorded income for this month, so savings and savings rate cannot be calculated.";
+        }
+        if (/income|salary|earn/.test(normalized)) {
+          return `Recorded income for ${monthTitle(activeMonth)} is ${money.format(income)}.`;
+        }
+        if (/subscription|recurring/.test(normalized)) {
+          const recurringCategory = monthTx.filter((tx) => tx.category === "Subscriptions" && tx.type === "expense");
+          return recurringCategory.length ? `I found ${recurringCategory.length} transaction${recurringCategory.length === 1 ? "" : "s"} categorized as Subscriptions, totaling ${money.format(recurringCategory.reduce((sum, tx) => sum + tx.amount, 0))}. This does not confirm a recurring payment.` : "No transactions categorized as Subscriptions were recorded this month.";
+        }
+        if (/spent|expense|where|total|money/.test(normalized)) {
+          return `You recorded ${money.format(spent)} in net expenses and ${money.format(income)} in income for ${monthTitle(activeMonth)}. Transfers are excluded; refunds reduce expenses.`;
+        }
+        return "I can summarize recorded income, savings, total spending, subscriptions, or a category. Try asking “How much did I spend on Groceries?”";
+      }
+      function renderFilterOptions() {
+        const filter = document.getElementById("categoryFilter");
+        const previous = filter.value;
+        filter.innerHTML = `<option value="">All categories</option>` + categories.map((item) => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`).join("");
+        filter.value = categories.includes(previous) ? previous : "";
+        updateCategoryOptions();
+      }
+      function updateCategoryOptions() {
+        const type = document.getElementById("typeInput").value;
+        const eligible = type === "income"
+          ? ["Salary", "Business income", "Interest & dividends", "Other"]
+          : type === "refund" ? ["Refunds", ...categories.filter((category) => !["Salary", "Business income", "Interest & dividends", "Refunds"].includes(category))]
+          : type === "transfer" ? ["Other"]
+          : categories.filter((category) => !["Salary", "Business income", "Interest & dividends", "Refunds"].includes(category));
+        document.getElementById("categoryInput").innerHTML = eligible.map((item) => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`).join("");
+      }
+      function render() {
+        buildMonthOptions();
+        const monthTx = selectedTransactions();
+        renderMetrics(monthTx);
+        renderChart();
+        renderCategories(monthTx);
+        renderBudgets(monthTx);
+        renderTransactions(monthTx);
+        const question = document.getElementById("questionInput").value.trim();
+        if (question) document.getElementById("assistantAnswer").textContent = answerQuestion(question, monthTx);
+      }
+      function openModal() {
+        document.getElementById("transactionForm").reset();
+        document.getElementById("dateInput").value = dateOffset(0);
+        document.getElementById("typeInput").value = "expense";
+        updateCategoryOptions();
+        document.getElementById("modalBackdrop").classList.add("open");
+        document.getElementById("descriptionInput").focus();
+      }
+      function closeModal() { document.getElementById("modalBackdrop").classList.remove("open"); }
+      function parseCsvLine(line) {
+        const values = [];
+        let value = "", quoted = false;
+        for (let index = 0; index < line.length; index += 1) {
+          const char = line[index];
+          if (char === '"' && quoted && line[index + 1] === '"') { value += '"'; index += 1; }
+          else if (char === '"') quoted = !quoted;
+          else if (char === "," && !quoted) { values.push(value.trim()); value = ""; }
+          else value += char;
+        }
+        values.push(value.trim());
+        return values;
+      }
+      function parseCsv(text) {
+        const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter((line) => line.trim());
+        if (lines.length < 2) throw new Error("The CSV needs a header row and at least one transaction.");
+        const headers = parseCsvLine(lines[0]).map((header) => header.toLowerCase().replace(/[^a-z0-9]/g, ""));
+        const findColumn = (...names) => headers.findIndex((header) => names.includes(header));
+        const dateIndex = findColumn("date", "transactiondate", "posteddate");
+        const descriptionIndex = findColumn("description", "merchant", "name", "payee", "narration", "particulars", "transaction", "transactiondetails", "transactionremarks", "remarks");
+        const amountIndex = findColumn("amount", "value", "transactionamount");
+        const debitIndex = findColumn("debit", "withdrawal", "debitamount", "withdrawalamount");
+        const creditIndex = findColumn("credit", "deposit", "creditamount", "depositamount");
+        const categoryIndex = findColumn("category");
+        const typeIndex = findColumn("transactiontype", "entrytype", "drcr", "type");
+        const accountIndex = findColumn("account", "accountname", "accountnumber", "source");
+        if (dateIndex < 0 || descriptionIndex < 0 || (amountIndex < 0 && debitIndex < 0 && creditIndex < 0)) {
+          throw new Error("CSV headers must include Date, Description (or Merchant), and Amount or Debit/Credit columns.");
+        }
+        const parseDate = (value) => {
+          const trimmed = value.trim();
+          let match = trimmed.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+          if (match) return validDate(match[1], match[2], match[3]);
+          match = trimmed.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+          if (match) return validDate(match[3], match[2], match[1]);
+          match = trimmed.match(/^(\d{1,2})[-\s]([A-Za-z]{3})[-\s](\d{4})$/);
+          if (match) {
+            const parsed = new Date(`${match[2]} ${match[1]}, ${match[3]}`);
+            if (!Number.isNaN(parsed.getTime())) return validDate(parsed.getFullYear(), parsed.getMonth() + 1, parsed.getDate());
+          }
+          return "";
+        };
+        const validDate = (year, month, day) => {
+          const date = new Date(Number(year), Number(month) - 1, Number(day));
+          if (date.getFullYear() !== Number(year) || date.getMonth() !== Number(month) - 1 || date.getDate() !== Number(day)) return "";
+          return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+        };
+        const amountValue = (raw) => {
+          const value = raw.trim();
+          if (!value) return 0;
+          const negative = /^\(.*\)$/.test(value) || /\bDR\b/i.test(value);
+          const number = Number(value.replace(/[₹$,\s]/g, "").replace(/[()]/g, "").replace(/\b(?:CR|DR)\b/gi, ""));
+          return Number.isFinite(number) ? (negative ? -Math.abs(number) : number) : NaN;
+        };
+        const classify = (description, rawCategory, rawType, signedAmount, hasDebitCredit) => {
+          const detail = `${rawType} ${rawCategory} ${description}`.toLowerCase();
+          if (/internal transfer|own account|self transfer|fund transfer|transfer to|transfer from|credit card payment|credit card bill/.test(detail)) return "transfer";
+          if (/refund|reversal|chargeback/.test(detail)) return "refund";
+          if (hasDebitCredit) return signedAmount < 0 ? "expense" : "income";
+          if (signedAmount < 0 || /\b(debit|withdrawal|paid|purchase)\b/i.test(rawType)) return "expense";
+          return /income|salary|deposit|credit|dividend|interest|cashback/i.test(detail) ? "income" : "expense";
+        };
+        const categorize = (description, rawCategory, type) => {
+          if (type === "income") {
+            const lower = `${rawCategory} ${description}`.toLowerCase();
+            if (/salary|payroll/.test(lower)) return "Salary";
+            if (/business|invoice/.test(lower)) return "Business income";
+            if (/interest|dividend/.test(lower)) return "Interest & dividends";
+          }
+          const exact = categories.find((item) => item.toLowerCase() === rawCategory.trim().toLowerCase());
+          if (exact) return exact;
+          if (type === "refund") return "Refunds";
+          const detail = `${rawCategory} ${description}`.toLowerCase();
+          if (/grocery|grocer|supermarket|bigbasket|zepto|blinkit/.test(detail)) return "Groceries";
+          if (/restaurant|cafe|coffee|food|swiggy|zomato/.test(detail)) return "Food & Dining";
+          if (/fuel|petrol|diesel|gas station/.test(detail)) return "Fuel";
+          if (/travel|flight|hotel|rail|train|metro|uber|ola|cab|bus/.test(detail)) return "Travel";
+          if (/rent|landlord/.test(detail)) return "Rent";
+          if (/electric|water bill|utility|internet|broadband|mobile recharge/.test(detail)) return "Utilities";
+          if (/doctor|hospital|pharmacy|medical|health/.test(detail)) return "Healthcare";
+          if (/school|college|course|tuition|education/.test(detail)) return "Education";
+          if (/netflix|spotify|subscription|ott/.test(detail)) return "Subscriptions";
+          if (/insurance|premium/.test(detail)) return "Insurance";
+          if (/emi|loan repayment|installment/.test(detail)) return "EMIs";
+          if (/movie|cinema|concert|entertainment/.test(detail)) return "Entertainment";
+          return "Other";
+        };
+        const imported = [];
+        for (const line of lines.slice(1)) {
+          const values = parseCsvLine(line);
+          const date = parseDate(values[dateIndex] || "");
+          const description = (values[descriptionIndex] || "").trim();
+          const rawCategory = categoryIndex >= 0 ? values[categoryIndex] : "";
+          const rawType = typeIndex >= 0 ? values[typeIndex] || "" : "";
+          const debit = debitIndex >= 0 ? amountValue(values[debitIndex] || "") : 0;
+          const credit = creditIndex >= 0 ? amountValue(values[creditIndex] || "") : 0;
+          const hasDebitCredit = debitIndex >= 0 || creditIndex >= 0;
+          const amount = hasDebitCredit ? (Math.abs(credit) || -Math.abs(debit)) : amountValue(values[amountIndex] || "");
+          if (!date || !description || !Number.isFinite(amount) || amount === 0) continue;
+          const type = classify(description, rawCategory, rawType, amount, hasDebitCredit);
+          imported.push({
+            id: `import-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+            description, category: categorize(description, rawCategory, type),
+            amount: Math.abs(amount), type, date,
+            account: accountIndex >= 0 ? (values[accountIndex] || "").trim() : "",
+            source: "CSV"
+          });
+        }
+        if (!imported.length) throw new Error("No valid transactions found. Check the dates and amounts in your CSV.");
+        return imported;
+      }
+
+      renderFilterOptions();
+      render();
+      document.getElementById("addButton").addEventListener("click", openModal);
+      document.getElementById("closeModal").addEventListener("click", closeModal);
+      document.getElementById("cancelModal").addEventListener("click", closeModal);
+      document.getElementById("modalBackdrop").addEventListener("click", (event) => {
+        if (event.target === event.currentTarget) closeModal();
+      });
+      document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeModal(); });
+      document.getElementById("transactionForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
+        const amount = Number(formData.get("amount"));
+        if (!Number.isFinite(amount) || amount <= 0) return showToast("Enter an amount greater than zero.");
+        const date = String(formData.get("date"));
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return showToast("Choose a valid transaction date.");
+        const type = String(formData.get("type"));
+        transactions.push({
+          id: `tx-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          description: String(formData.get("description")).trim(),
+          category: String(formData.get("category")),
+          amount, type, date
+        });
+        hasPersonalData = true;
+        activeMonth = date.slice(0, 7);
+        save();
+        closeModal();
+        render();
+        showToast("Transaction added.");
+      });
+      document.getElementById("typeInput").addEventListener("change", updateCategoryOptions);
+      document.getElementById("monthSelect").addEventListener("change", (event) => { activeMonth = event.target.value; render(); });
+      document.getElementById("searchInput").addEventListener("input", () => renderTransactions(selectedTransactions()));
+      document.getElementById("categoryFilter").addEventListener("change", () => renderTransactions(selectedTransactions()));
+      document.getElementById("transactionRows").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-delete]");
+        if (!button) return;
+        transactions = transactions.filter((tx) => tx.id !== button.dataset.delete);
+        save();
+        render();
+        showToast("Transaction deleted.");
+      });
+      document.getElementById("transactionRows").addEventListener("change", (event) => {
+        const select = event.target.closest("[data-category]");
+        if (!select) return;
+        const transaction = transactions.find((tx) => tx.id === select.dataset.category);
+        if (!transaction || !categories.includes(select.value)) return;
+        transaction.category = select.value;
+        hasPersonalData = true;
+        save();
+        render();
+        showToast("Category updated.");
+      });
+      document.getElementById("budgetForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const category = document.getElementById("budgetCategory").value;
+        const amount = Number(document.getElementById("budgetAmount").value);
+        if (!Number.isFinite(amount) || amount <= 0) return showToast("Enter a budget greater than zero.");
+        const existing = budgets.find((budget) => budget.category === category);
+        if (existing) existing.amount = amount;
+        else budgets.push({ category, amount });
+        saveBudgets();
+        event.currentTarget.reset();
+        render();
+        showToast(`${category} budget saved.`);
+      });
+      document.getElementById("budgetList").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-budget-delete]");
+        if (!button) return;
+        budgets = budgets.filter((budget) => budget.category !== button.dataset.budgetDelete);
+        saveBudgets();
+        render();
+        showToast("Budget removed.");
+      });
+      document.getElementById("assistantForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        document.getElementById("assistantAnswer").textContent = answerQuestion(
+          document.getElementById("questionInput").value.trim(), selectedTransactions()
+        );
+      });
+      document.getElementById("importButton").addEventListener("click", () => document.getElementById("csvInput").click());
+      document.getElementById("exportButton").addEventListener("click", () => {
+        if (!transactions.length) return showToast("There are no transactions to export.");
+        const headers = ["Date", "Description", "Amount", "Category", "Type", "Account", "Source"];
+        const quote = (value) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+        const rows = transactions.map((tx) => [
+          tx.date, tx.description, tx.type === "expense" ? -tx.amount : tx.amount,
+          tx.category, tx.type, tx.account || "", tx.source || "Manual"
+        ].map(quote).join(","));
+        const blob = new Blob(["\uFEFF", headers.map(quote).join(","), "\r\n", rows.join("\r\n")], { type: "text/csv;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `paisaiq-transactions-${activeMonth}.csv`;
+        link.click();
+        URL.revokeObjectURL(url);
+        showToast("Transaction CSV exported.");
+      });
+      document.getElementById("clearDataButton").addEventListener("click", () => {
+        if (!window.confirm("Delete all saved transactions and budgets from this browser? This cannot be undone.")) return;
+        transactions = [];
+        budgets = [];
+        hasPersonalData = true;
+        save();
+        saveBudgets();
+        render();
+        showToast("Local transaction and budget data cleared.");
+      });
+      document.getElementById("csvInput").addEventListener("change", async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        try {
+          const imported = parseCsv(await file.text());
+          const transactionKey = (tx) => `${tx.date}|${tx.description.toLowerCase().replace(/\s+/g, " ").trim()}|${tx.amount.toFixed(2)}|${tx.type}`;
+          const known = new Set(transactions.map(transactionKey));
+          const unique = imported.filter((tx) => {
+            const key = transactionKey(tx);
+            if (known.has(key)) return false;
+            known.add(key);
+            return true;
+          });
+          if (!unique.length) {
+            showToast("No new transactions to import; duplicates were skipped.");
+            return;
+          }
+          transactions.push(...unique);
+          hasPersonalData = true;
+          activeMonth = unique.slice().sort((a, b) => b.date.localeCompare(a.date))[0].date.slice(0, 7);
+          save();
+          render();
+          const skipped = imported.length - unique.length;
+          showToast(`Imported ${unique.length}; skipped ${skipped} duplicate${skipped === 1 ? "" : "s"}.`);
+        } catch (error) {
+          console.error("CSV import failed.", error);
+          showToast(error.message || "Couldn't import this CSV.");
+        } finally {
+          event.target.value = "";
+        }
+      });
+      document.getElementById("transactionsNav").addEventListener("click", () => document.getElementById("transactionsSection").scrollIntoView({ behavior: "smooth" }));
+      document.getElementById("insightsNav").addEventListener("click", () => document.getElementById("categoryPanel").scrollIntoView({ behavior: "smooth" }));
+      document.getElementById("budgetsNav").addEventListener("click", () => document.getElementById("budgetPanel").scrollIntoView({ behavior: "smooth" }));
+    })();
+  </script>
+</body>
+</html>
